@@ -1,49 +1,65 @@
 document.addEventListener("DOMContentLoaded", () => {
     const err = document.getElementById('err');
     const status = document.getElementById('status');
-    const userDiv = document.getElementById('user');
+    const userGrid = document.getElementById('userGrid');
     const loadBtn = document.getElementById('loadBtn');
 
-    loadBtn.addEventListener('click', loadUser);
+    loadBtn.addEventListener('click', loadUsers);
 
-    async function loadUser() {
+    async function loadUsers() {
         err.textContent = "";
-        let loadingInterval = null;
-        let dotCount = 1;
-
-        loadingInterval = setInterval(() => {
-            const dots = ".".repeat(dotCount);
-            status.textContent = `Loading${dots}`;
-            dotCount = (dotCount % 3) + 1;
-        }, 100);
-        
-        userDiv.innerHTML = "";
+        userGrid.innerHTML = "";
         loadBtn.disabled = true;
 
-        const randomId = Math.floor(Math.random() * 10) + 1;
-        const userUrl = `https://jsonplaceholder.typicode.com/users/${randomId}`;
+        status.textContent = "Loading...";
 
         try {
-            const response = await fetch(userUrl);
+            const res = await fetch("https://jsonplaceholder.typicode.com/users");
 
-            if (!response.ok) {
-                throw new Error("User not found");
-            }
+            if (!res.ok) throw new Error("Failed to load users");
 
-            const data = await response.json();
+            const users = await res.json();
 
-            userDiv.innerHTML = `
-                <h3>${data.name}</h3>
-                <p>${data.email}</p>
-            `;
+            users.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.classList.add('user');
+                userDiv.id = user.id;
+
+                userDiv.innerHTML = `
+                    <h3>${user.name}</h3>
+                    <p>${user.email}</p>
+                `;
+
+                const btn = document.createElement('button');
+                btn.textContent = "Details";
+
+                btn.addEventListener('click', () => {
+                    showDetails(user, userDiv);
+                });
+
+                userDiv.appendChild(btn);
+                userGrid.appendChild(userDiv);
+            });
 
             status.textContent = "";
 
         } catch (error) {
-            err.textContent = `Error: ${error.message || error}`;
+            err.textContent = `Error: ${error.message}`;
         } finally {
-            clearInterval(loadingInterval);
             loadBtn.disabled = false;
+        }
+    }
+
+function showDetails(user, container) {
+        container.querySelectorAll('.user-detail').forEach(el => el.remove());
+
+        for (const key in user) {
+            if (typeof user[key] !== "object" && user[key]) {
+                const p = document.createElement('p');
+                p.classList.add('user-detail');
+                p.textContent = `${key}: ${user[key]}`;
+                container.appendChild(p);
+            }
         }
     }
 });
