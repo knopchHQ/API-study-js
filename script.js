@@ -4,9 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const userGrid = document.getElementById('userGrid');
     const loadBtn = document.getElementById('loadBtn');
 
-    loadBtn.addEventListener('click', loadUsers);
+    let allUsers = [];
+    let openDetails = new Set();
+    let currentUsers = [];
 
-    async function loadUsers() {
+    loadBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         err.textContent = "";
         userGrid.innerHTML = "";
         loadBtn.disabled = true;
@@ -18,39 +21,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!res.ok) throw new Error("Failed to load users");
 
-            const users = await res.json();
+            allUsers = await res.json();
 
-            users.forEach(user => {
-                const userDiv = document.createElement('div');
-                userDiv.classList.add('user');
-                userDiv.id = user.id;
-
-                userDiv.innerHTML = `
-                    <h3>${user.name}</h3>
-                    <p>${user.email}</p>
-                `;
-
-                const btn = document.createElement('button');
-                btn.textContent = "Details";
-
-                btn.addEventListener('click', () => {
-                    showDetails(user, userDiv);
-                });
-
-                userDiv.appendChild(btn);
-                userGrid.appendChild(userDiv);
-            });
-
-            status.textContent = "";
-
+            renderUsers(allUsers);
         } catch (error) {
             err.textContent = `Error: ${error.message}`;
         } finally {
             loadBtn.disabled = false;
         }
+    });
+
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('input', () => {
+        const value = searchInput.value.toLowerCase();
+        const filtered = allUsers.filter(user => {
+            return user.name.toLowerCase().includes(value) || user.email.toLowerCase().includes(value);
+        });
+        currentUsers = filtered;
+        renderUsers(currentUsers);
+    });
+
+    function renderUsers(users) {
+        status.textContent = "";
+        userGrid.textContent = ""; // Clear the content of the user grid before rendering new users
+
+        users.forEach(user => {
+            const userDiv = document.createElement('div');
+            userDiv.classList.add('user');
+            userDiv.id = user.id;
+            const id = user.id;
+
+            userDiv.innerHTML = `
+                <h3>${user.name}</h3>
+                <p>${user.email}</p>
+            `;
+
+            if (openDetails.has(user.id)) {
+                showDetails(user, userDiv);
+            }
+
+            const btn = document.createElement('button');
+            btn.textContent = "Details";
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                if (openDetails.has(user.id)) {
+                    openDetails.delete(user.id);
+                } else {
+                    openDetails.add(user.id);
+                }
+                
+                renderUsers(currentUsers);
+            });
+
+            userGrid.appendChild(userDiv);
+            userDiv.appendChild(btn);
+        });
     }
 
-function showDetails(user, container) {
+    function showDetails(user, container) {
         container.querySelectorAll('.user-detail').forEach(el => el.remove());
 
         for (const key in user) {
