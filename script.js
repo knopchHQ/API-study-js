@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!res.ok) throw new Error("Failed to load users");
 
+
             allUsers = await res.json();
             currentUsers = allUsers;
 
@@ -37,13 +38,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const searchInputName = document.getElementById('search-name');
     const searchInputEmail = document.getElementById('search-email');
-    searchInputName.addEventListener('input', applyFilters);
-    searchInputEmail.addEventListener('input', applyFilters);
+    const debounceApplyFilters = debounce(applyFilters, 400);
+    searchInputName.addEventListener('input', debounceApplyFilters);
+    searchInputEmail.addEventListener('input', debounceApplyFilters);
 
-    sortByName.addEventListener('change', renderUsers);
+    sortByName.addEventListener('change', () => {
+        renderUsers(currentUsers);
+    });
 
     function renderUsers(users) {
         status.textContent = "";
+        status.style.color = 'rgb(212, 212, 212)';
         userGrid.textContent = ""; // Clear the content of the user grid before rendering new users
 
         const usersToRender = [...users];
@@ -62,14 +67,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.textContent = `Showing: ${usersToRender.length} users`;
 
+        if (usersToRender.length === 0) {
+            status.innerHTML = '<span style="color:red">No users found</span>';
+        }
+
         usersToRender.forEach(user => {
             const userDiv = document.createElement('div');
             userDiv.classList.add('user');
             userDiv.id = user.id;
 
+    const nameValue = searchInputName.value.toLowerCase();
+    const emailValue = searchInputEmail.value.toLowerCase();
+
+            const nameHighlighted = highlightText(user.name, nameValue);
+            const emailHighlighted = highlightText(user.email, emailValue);
+
             userDiv.innerHTML = `
-                <h3>${user.name}</h3>
-                <p>${user.email}</p>
+                <h3>${nameHighlighted}</h3>
+                <p>${emailHighlighted}</p>
             `;
 
             if (openDetails.has(user.id)) {
@@ -82,17 +97,16 @@ document.addEventListener("DOMContentLoaded", () => {
             btnDetails.addEventListener('click', () => {
                 if (openDetails.has(user.id)) {
                     openDetails.delete(user.id);
-                } else {
+            } else {
                     openDetails.add(user.id);
-                }
-                
-                renderUsers(currentUsers);
-            });
+            }
+        renderUsers(currentUsers);
+    });
 
             userDiv.appendChild(btnDetails);
             userGrid.appendChild(userDiv);
         });
-    }
+        };
 
     function showDetails(user, container) {
         container.querySelectorAll('.user-detail').forEach(el => el.remove());
@@ -105,22 +119,42 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.appendChild(p);
             }
         }
+    };
+
+    function highlightText(text, match) {
+        if (!match) return text;
+
+        const regex = new RegExp(match, 'gi');
+        return text.replace(regex, (match) => `<mark>${match}</mark>`);
     }
 
     function applyFilters() {
-    const nameValue = searchInputName.value.toLowerCase();
-    const emailValue = searchInputEmail.value.toLowerCase();
+        const nameValue = searchInputName.value.toLowerCase();
+        const emailValue = searchInputEmail.value.toLowerCase();
 
-    currentUsers = allUsers.filter(user => {
-        return (
-            user.name.toLowerCase().includes(nameValue) &&
-            user.email.toLowerCase().includes(emailValue)
-        );
-    });
+        currentUsers = allUsers.filter(user => {
+            return (
+                user.name.toLowerCase().includes(nameValue) &&
+                user.email.toLowerCase().includes(emailValue)
+            );
+});
 
-    renderUsers(currentUsers);
+        renderUsers(currentUsers);
+    };
+
+    function matchHighlight(str, term) {
+        let highlightedStr = '';
+        const regex = new RegExp(term, 'g');
+        str.split('').forEach((char, index) => {
+            if (regex.test(char)) {
+                highlightedStr += `<span style="color: yellow;">${char}</span>`;
+            } else {
+                highlightedStr += char;
+            }
+        });
+        return highlightedStr;
     }
-    
+
     resetBtn.addEventListener('click', () => {
         sortByName.value = 'default';
         searchInputName.value = '';
@@ -128,5 +162,15 @@ document.addEventListener("DOMContentLoaded", () => {
         currentUsers = allUsers;
         renderUsers(currentUsers);
     });
+
+    function debounce(callback, delay) {
+        let timer;
+        return function() {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                callback();
+            }, delay);
+        };
+    };
 });
 
