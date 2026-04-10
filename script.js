@@ -3,6 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const status = document.getElementById('status');
     const userGrid = document.getElementById('userGrid');
     const loadBtn = document.getElementById('loadBtn');
+    const sortByName = document.getElementById('sort-selector');
+    const resetBtn = document.getElementById('reset-filters');
+    const state = document.getElementById('state');
 
     let allUsers = [];
     let openDetails = new Set();
@@ -22,8 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!res.ok) throw new Error("Failed to load users");
 
             allUsers = await res.json();
+            currentUsers = allUsers;
 
-            renderUsers(allUsers);
+            renderUsers(currentUsers);
         } catch (error) {
             err.textContent = `Error: ${error.message}`;
         } finally {
@@ -31,25 +35,37 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const searchInput = document.getElementById('search');
-    searchInput.addEventListener('input', () => {
-        const value = searchInput.value.toLowerCase();
-        const filtered = allUsers.filter(user => {
-            return user.name.toLowerCase().includes(value) || user.email.toLowerCase().includes(value);
-        });
-        currentUsers = filtered;
-        renderUsers(currentUsers);
-    });
+    const searchInputName = document.getElementById('search-name');
+    const searchInputEmail = document.getElementById('search-email');
+    searchInputName.addEventListener('input', applyFilters);
+    searchInputEmail.addEventListener('input', applyFilters);
+
+    sortByName.addEventListener('change', renderUsers);
 
     function renderUsers(users) {
         status.textContent = "";
         userGrid.textContent = ""; // Clear the content of the user grid before rendering new users
 
-        users.forEach(user => {
+        const usersToRender = [...users];
+
+        if (sortByName.value === 'name-asc') {
+            usersToRender.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        
+        if (sortByName.value === 'name-desc') {
+            usersToRender.sort((a, b) => b.name.localeCompare(a.name)); 
+        }
+
+        if (sortByName.value === 'default') {
+            usersToRender.sort((a, b) => a.id - b.id);
+        }
+
+        state.textContent = `Showing: ${usersToRender.length} users`;
+
+        usersToRender.forEach(user => {
             const userDiv = document.createElement('div');
             userDiv.classList.add('user');
             userDiv.id = user.id;
-            const id = user.id;
 
             userDiv.innerHTML = `
                 <h3>${user.name}</h3>
@@ -60,12 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 showDetails(user, userDiv);
             }
 
-            const btn = document.createElement('button');
-            btn.textContent = "Details";
+            const btnDetails = document.createElement('button');
+            btnDetails.textContent = openDetails.has(user.id) ? "Hide Details" : "Show Details";
 
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-
+            btnDetails.addEventListener('click', () => {
                 if (openDetails.has(user.id)) {
                     openDetails.delete(user.id);
                 } else {
@@ -75,8 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderUsers(currentUsers);
             });
 
+            userDiv.appendChild(btnDetails);
             userGrid.appendChild(userDiv);
-            userDiv.appendChild(btn);
         });
     }
 
@@ -92,4 +106,27 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     }
+
+    function applyFilters() {
+    const nameValue = searchInputName.value.toLowerCase();
+    const emailValue = searchInputEmail.value.toLowerCase();
+
+    currentUsers = allUsers.filter(user => {
+        return (
+            user.name.toLowerCase().includes(nameValue) &&
+            user.email.toLowerCase().includes(emailValue)
+        );
+    });
+
+    renderUsers(currentUsers);
+    }
+    
+    resetBtn.addEventListener('click', () => {
+        sortByName.value = 'default';
+        searchInputName.value = '';
+        searchInputEmail.value = '';
+        currentUsers = allUsers;
+        renderUsers(currentUsers);
+    });
 });
+

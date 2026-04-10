@@ -12,8 +12,19 @@
             <div class="app-header">
                 <button id="loadBtn">Load User</button>
                 <div class="err" id="err"></div>
-                <input type="text" id="search" placeholder="Search user..." />
+                <div class="sort-container">
+                    <input type="text" id="search-name" placeholder="Search user by name..." />
+                    <input type="text" id="search-email" placeholder="Search user by email..." />
+                    <button id="reset-filters">Reset Filter</button>
+                    <label for="sort-selector">Sort by name:</label>
+                    <select id="sort-selector">
+                        <option value="default">Default</option>
+                        <option value="name-asc">A → Z</option>
+                        <option value="name-desc">Z → A</option>
+                    </select>
+                </div>
                 <p id="status"></p>
+                <p id="state"></p>
             </div>
             <div class="user-grid" id="userGrid">
                 <div id="user"></div>

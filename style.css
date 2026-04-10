@@ -54,3 +54,7 @@ button:hover {
     width: fit-content;
     height: fit-content;
 }
+.state {
+    color: rgb(52, 52, 255);
+    text-align: left;
+}
