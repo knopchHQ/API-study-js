@@ -1,125 +1,177 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const err = document.getElementById('err');
-    const status = document.getElementById('status');
     const userGrid = document.getElementById('userGrid');
     const loadBtn = document.getElementById('loadBtn');
-    const sortByName = document.getElementById('sort-selector');
+    const searchName = document.getElementById('search-name');
+    const searchEmail = document.getElementById('search-email');
     const resetBtn = document.getElementById('reset-filters');
+    const sortSelector = document.getElementById('sort-selector');
     const state = document.getElementById('state');
+    const status = document.getElementById('status');
+    const emptyState = document.getElementById('empty-state');
+    const err = document.getElementById('err');
 
-    let allUsers = [];
-    let openDetails = new Set();
-    let currentUsers = [];
+    // footer year
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-    loadBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        err.textContent = "";
-        userGrid.innerHTML = "";
-        loadBtn.disabled = true;
+    // App state
+    let users = [];
+    let filteredUsers = [];
+    let selectedCardId = null;
 
-        status.textContent = "Loading...";
+    // update UI (render + status)
+    function renderUsers() {
+        const usersToRender = [...filteredUsers];
+
+        if (sortSelector.value === 'name-asc') {
+            usersToRender.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortSelector.value === 'name-desc') {
+            usersToRender.sort((a, b) => b.name.localeCompare(a.name)); 
+        } else {
+            // default: keep as is
+        }
+
+        const count = usersToRender.length;
+        state.textContent = `Showing: ${count} user${count !== 1 ? 's' : ''}`;
+
+        if (count === 0) {
+            if (users.length === 0) {
+                emptyState.style.display = "block";
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+        
+        if (count === 0) {
+            userGrid.innerHTML = '';
+            if (users.length && status) status.textContent = 'No users loaded yet.';
+            else if (users.length > 0) status.textContent = 'No matches.';
+            return
+        }
+
+        let html = '';
+        usersToRender.forEach(user => {            
+            const isExpanded = (selectedCardId === user.id);
+
+            html += `
+                <div class="user-card ${isExpanded ? 'expanded' : ''}"  id="${user.id}">
+                    <div class="user-card-header">
+                        <div class="user-icon">
+                            <img class="icon-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233f37c9'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="user">
+                        </div>
+                        <div class="user-basic">
+                            <h3 class="user-name">${user.name}</h3>
+                            <p class="user-email">${user.email}</p>
+                        </div>
+                        <button class="btn-details" id="${user.id}">
+                            ${isExpanded ? 'Close' : 'Show Details'}
+                        </button>
+                    </div>
+                    
+                    ${isExpanded ? `
+                        <div class="user-details-expanded">
+                            <div class="detail-row">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value">${user.phone || '__'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Website</span>
+                                <span class="detail-value">
+                                    ${user.website ? `<a href="https://${user.website}" target="_blank">${user.website}</a>` : '__'}
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Company</span>
+                                <span class="detail-value">${user.company || '—'}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+        });
+        status.textContent = "";
+        userGrid.innerHTML = html;
+    };
+
+    function applyFilters() {
+        const nameValue = searchName.value.trim().toLowerCase();
+        const emailValue = searchEmail.value.trim().toLowerCase();
+
+        filteredUsers = users.filter(user => {
+            return (
+                user.name.toLowerCase().includes(nameValue) &&
+                user.email.toLowerCase().includes(emailValue)
+            );
+        });
+
+        if (selectedCardId && !filteredUsers.some(u => u.id === selectedCardId)) {
+            selectedCardId = null;
+        }
+
+        renderUsers();
+    };
+
+    async function fetchUsers() {
+        err.style.display = 'none';
+        
+        let dotCount = 1;
+
+        const loadingInterval = setInterval(() => {
+            const dots = ".".repeat(dotCount);
+            status.textContent = `Loading${dots}`;
+            dotCount = (dotCount % 3) + 1;
+        }, 300);  // Loading... Animation
 
         try {
             const res = await fetch("https://jsonplaceholder.typicode.com/users");
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            
+            // transform date to user shape array
+            users = data.map(u => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                phone: u.phone,
+                website: u.website,
+                company: u.company?.name || ''
+            }));
+            
+            // reset filters
+            searchName.value = '';
+            searchEmail.value = '';
+            sortSelector.value = 'default';
+            filteredUsers = [...users];
 
-            if (!res.ok) throw new Error("Failed to load users");
-
-
-            allUsers = await res.json();
-            currentUsers = allUsers;
-
-            renderUsers(currentUsers);
+            renderUsers();
         } catch (error) {
+            console.log(error);
+            err.style.display = 'block';
             err.textContent = `Error: ${error.message}`;
+            status.textContent = 'Failed to load users';
+            users = [];
+            filteredUsers = [];
+            renderUsers();
         } finally {
             loadBtn.disabled = false;
+            clearInterval(loadingInterval);
         }
-    });
+    }
 
-    const searchInputName = document.getElementById('search-name');
-    const searchInputEmail = document.getElementById('search-email');
-    const debounceApplyFilters = debounce(applyFilters, 400);
-    searchInputName.addEventListener('input', debounceApplyFilters);
-    searchInputEmail.addEventListener('input', debounceApplyFilters);
+    function showDetails(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
 
-    sortByName.addEventListener('change', () => {
-        renderUsers(currentUsers);
-    });
-
-    function renderUsers(users) {
-        status.textContent = "";
-        status.style.color = 'rgb(212, 212, 212)';
-        userGrid.textContent = ""; // Clear the content of the user grid before rendering new users
-
-        const usersToRender = [...users];
-
-        if (sortByName.value === 'name-asc') {
-            usersToRender.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        
-        if (sortByName.value === 'name-desc') {
-            usersToRender.sort((a, b) => b.name.localeCompare(a.name)); 
+        // Toggle
+        if (selectedCardId === userId) {
+            selectedCardId = null;
+        } else {
+            selectedCardId = userId;
         }
 
-        if (sortByName.value === 'default') {
-            usersToRender.sort((a, b) => a.id - b.id);
-        }
-
-        state.textContent = `Showing: ${usersToRender.length} users`;
-
-        if (usersToRender.length === 0) {
-            status.innerHTML = '<span style="color:red">No users found</span>';
-        }
-
-        usersToRender.forEach(user => {
-            const userDiv = document.createElement('div');
-            userDiv.classList.add('user');
-            userDiv.id = user.id;
-
-    const nameValue = searchInputName.value.toLowerCase();
-    const emailValue = searchInputEmail.value.toLowerCase();
-
-            const nameHighlighted = highlightText(user.name, nameValue);
-            const emailHighlighted = highlightText(user.email, emailValue);
-
-            userDiv.innerHTML = `
-                <h3>${nameHighlighted}</h3>
-                <p>${emailHighlighted}</p>
-            `;
-
-            if (openDetails.has(user.id)) {
-                showDetails(user, userDiv);
-            }
-
-            const btnDetails = document.createElement('button');
-            btnDetails.textContent = openDetails.has(user.id) ? "Hide Details" : "Show Details";
-
-            btnDetails.addEventListener('click', () => {
-                if (openDetails.has(user.id)) {
-                    openDetails.delete(user.id);
-            } else {
-                    openDetails.add(user.id);
-            }
-        renderUsers(currentUsers);
-    });
-
-            userDiv.appendChild(btnDetails);
-            userGrid.appendChild(userDiv);
-        });
-        };
-
-    function showDetails(user, container) {
-        container.querySelectorAll('.user-detail').forEach(el => el.remove());
-
-        for (const key in user) {
-            if (typeof user[key] !== "object" && user[key]) {
-                const p = document.createElement('p');
-                p.classList.add('user-detail');
-                p.textContent = `${key}: ${user[key]}`;
-                container.appendChild(p);
-            }
-        }
-    };
+        renderUsers();
+        console.log('showDetails')
+    }
 
     function highlightText(text, match) {
         if (!match) return text;
@@ -127,41 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const regex = new RegExp(match, 'gi');
         return text.replace(regex, (match) => `<mark>${match}</mark>`);
     }
-
-    function applyFilters() {
-        const nameValue = searchInputName.value.toLowerCase();
-        const emailValue = searchInputEmail.value.toLowerCase();
-
-        currentUsers = allUsers.filter(user => {
-            return (
-                user.name.toLowerCase().includes(nameValue) &&
-                user.email.toLowerCase().includes(emailValue)
-            );
-});
-
-        renderUsers(currentUsers);
-    };
-
-    function matchHighlight(str, term) {
-        let highlightedStr = '';
-        const regex = new RegExp(term, 'g');
-        str.split('').forEach((char, index) => {
-            if (regex.test(char)) {
-                highlightedStr += `<span style="color: yellow;">${char}</span>`;
-            } else {
-                highlightedStr += char;
-            }
-        });
-        return highlightedStr;
-    }
-
-    resetBtn.addEventListener('click', () => {
-        sortByName.value = 'default';
-        searchInputName.value = '';
-        searchInputEmail.value = '';
-        currentUsers = allUsers;
-        renderUsers(currentUsers);
-    });
 
     function debounce(callback, delay) {
         let timer;
@@ -172,5 +189,42 @@ document.addEventListener("DOMContentLoaded", () => {
             }, delay);
         };
     };
-});
 
+    loadBtn.addEventListener('click', fetchUsers);
+
+    const debounceApplyFilters = debounce(applyFilters, 400);
+    searchName.addEventListener('input', debounceApplyFilters);
+    searchEmail.addEventListener('input', debounceApplyFilters);
+
+    resetBtn.addEventListener('click', () => {
+        searchName.value = '';
+        searchEmail.value = '';
+        sortSelector.value = 'default';
+        filteredUsers = users;
+        renderUsers();
+    });
+
+    sortSelector.addEventListener('change', () => {
+        renderUsers();
+    });
+
+    userGrid.addEventListener('click', (e) => {
+        const card = e.target.closest('.user-card');
+        if(!card) return;
+        const userId = Number(card.id);
+
+        const detailsBtn = e.target.closest('.btn-details');
+        if (detailsBtn) {
+            e.preventDefault();
+            showDetails(userId);
+            return;
+        }
+
+        if (userId) {
+            selectedCardId = userId;
+            renderUsers();
+        }
+    });
+    
+    fetchUsers();
+});

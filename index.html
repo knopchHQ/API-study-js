@@ -4,33 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- Favicon -->
+    <link rel="icon" href="logo.svg">
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts & base styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div id="app" class="app">
-            <div class="app-header">
-                <button id="loadBtn">Load User</button>
-                <div class="err" id="err"></div>
-                <div class="sort-container">
-                    <input type="text" id="search-name" placeholder="Search user by name..." />
-                    <input type="text" id="search-email" placeholder="Search user by email..." />
-                    <button id="reset-filters">Reset Filter</button>
-                    <label for="sort-selector">Sort by name:</label>
-                    <select id="sort-selector">
-                        <option value="default">Default</option>
-                        <option value="name-asc">A → Z</option>
-                        <option value="name-desc">Z → A</option>
-                    </select>
-                </div>
-                <p id="state"></p>
-                <p id="status"></p>
+    <!-- Navigation -->
+    <header class="site-header">
+        <div class="nav container" id="nav-menu">
+            <div class="nav-logo">
+                <div><img class="logo" src="logo.svg"></div>
             </div>
-            <div class="user-grid" id="userGrid">
-                <div id="user"></div>
-            </div>
+            <a class="github" href="https://github.com/knopchHQ/API-study-js" target="_blank" rel="noopener">
+                <!-- github mark inline (light) -->
+                <svg class="github-logo" viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.362 19.412-6.518 33.405-24.934 33.405-46.69C97.707 22 75.788 0 48.854 0z" fill="#24292f"/></svg>
+                <span class="github-text">GitHub</span>
+            </a>
         </div>
-    </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2 class="section-title">User Loader <span class="section-title_span">App</span></h2>
+
+            <div class="app-header">
+                <button id="loadBtn" class="btn-load">Load Users</button>
+                
+                <div class="sort">
+                    <span class="sort-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
+                        <input type="text" class="filter" id="search-name" placeholder=" Search user by name..." />
+                    </span>
+
+                    <span class="sort-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
+                        <input type="text" class="filter" id="search-email" placeholder="Search user by email..." />
+                    </span>
+
+                    <button id="reset-filters" class="btn-reset">
+                        <span class="sort-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m592-481-57-57 143-182H353l-80-80h487q25 0 36 22t-4 42L592-481ZM791-56 560-287v87q0 17-11.5 28.5T520-160h-80q-17 0-28.5-11.5T400-200v-247L56-791l56-57 736 736-57 56ZM535-538Z"/></svg></span>
+                        Reset Filter
+                    </button>
+
+                    <label for="sort-selector" class="sort-label">
+                        <span class="sort-icon"></span><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m80-280 150-400h86l150 400h-82l-34-96H196l-32 96H80Zm140-164h104l-48-150h-6l-50 150Zm328 164v-76l202-252H556v-72h282v76L638-352h202v72H548ZM360-760l120-120 120 120H360ZM480-80 360-200h240L480-80Z"/></svg></span>
+                        <span>Sort by name:</span>
+                        <select id="sort-selector" class="sort-selector">
+                            <option value="default">Default</option>
+                            <option value="name-asc">A → Z</option>
+                            <option value="name-desc">Z → A</option>
+                        </select>
+                    </label>
+                </div>
+
+                <p id="state" class="app-state">Showing 0 users</p>
+                <p id="status" class="app-status">Ready to load</p>
+                
+                <div class="empty-state" id="empty-state">
+                    <h3>No users found</h3>
+                    <p>Try different filters</p>
+                </div>                
+                <div class="err" id="err"></div>
+            </div>
+
+            <div class="user-grid" id="userGrid"></div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">© <span id="currentYear"></span> Alexander — Frontend Developer • Built with ❤️</p>
+        </div>
+    </footer>
+    <script src="script.js"></script>
 </body>
-<script src="script.js"></script>
 </html>
