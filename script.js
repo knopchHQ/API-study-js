@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sortSelector = document.getElementById('sort-selector');
     const state = document.getElementById('state');
     const status = document.getElementById('status');
+    const loadingContainer = document.getElementById('loading-container')
     const emptyState = document.getElementById('empty-state');
     const err = document.getElementById('err');
 
@@ -34,19 +35,18 @@ document.addEventListener("DOMContentLoaded", () => {
         state.textContent = `Showing: ${count} user${count !== 1 ? 's' : ''}`;
 
         if (count === 0) {
+            userGrid.innerHTML = '';
+            emptyState.classList.add('visible');
+            
             if (users.length === 0) {
-                emptyState.style.display = "block";
+                status.textContent = 'No users loaded yet.';
             } else {
-                emptyState.style.display = 'none';
+                status.textContent = 'No matches found.';
             }
+            return;
         }
         
-        if (count === 0) {
-            userGrid.innerHTML = '';
-            if (users.length && status) status.textContent = 'No users loaded yet.';
-            else if (users.length > 0) status.textContent = 'No matches.';
-            return
-        }
+        emptyState.classList.remove('visible');
 
         let html = '';
         usersToRender.forEach(user => {            
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             
         });
-        status.textContent = "";
+        
         userGrid.innerHTML = html;
     };
 
@@ -112,15 +112,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     async function fetchUsers() {
-        err.style.display = 'none';
+        err.classList.remove('visible');
+        loadBtn.disabled = true;
         
-        let dotCount = 1;
+        loadingContainer.classList.add('visible');
 
-        const loadingInterval = setInterval(() => {
-            const dots = ".".repeat(dotCount);
-            status.textContent = `Loading${dots}`;
-            dotCount = (dotCount % 3) + 1;
-        }, 300);  // Loading... Animation
+        userGrid.innerHTML = '';
+        emptyState.classList.remove('visible');
 
         try {
             const res = await fetch("https://jsonplaceholder.typicode.com/users");
@@ -143,10 +141,12 @@ document.addEventListener("DOMContentLoaded", () => {
             sortSelector.value = 'default';
             filteredUsers = [...users];
 
+            loadingContainer.classList.remove('visible');
             renderUsers();
         } catch (error) {
-            console.log(error);
-            err.style.display = 'block';
+            console.log(error);            
+            loadingContainer.classList.remove('visible');
+            err.classList.add('visible');
             err.textContent = `Error: ${error.message}`;
             status.textContent = 'Failed to load users';
             users = [];
@@ -154,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
             renderUsers();
         } finally {
             loadBtn.disabled = false;
-            clearInterval(loadingInterval);
         }
     }
 

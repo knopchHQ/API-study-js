@@ -36,15 +36,8 @@
                 <button id="loadBtn" class="btn-load">Load Users</button>
                 
                 <div class="sort">
-                    <span class="sort-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
-                        <input type="text" class="filter" id="search-name" placeholder=" Search user by name..." />
-                    </span>
-
-                    <span class="sort-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
-                        <input type="text" class="filter" id="search-email" placeholder="Search user by email..." />
-                    </span>
+                    <input type="text" class="filter search-name" id="search-name" placeholder=" Search user by name..." />
+                    <input type="text" class="filter search-email" id="search-email" placeholder="Search user by email..." />
 
                     <button id="reset-filters" class="btn-reset">
                         <span class="sort-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m592-481-57-57 143-182H353l-80-80h487q25 0 36 22t-4 42L592-481ZM791-56 560-287v87q0 17-11.5 28.5T520-160h-80q-17 0-28.5-11.5T400-200v-247L56-791l56-57 736 736-57 56ZM535-538Z"/></svg></span>
@@ -52,7 +45,6 @@
                     </button>
 
                     <label for="sort-selector" class="sort-label">
-                        <span class="sort-icon"></span><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m80-280 150-400h86l150 400h-82l-34-96H196l-32 96H80Zm140-164h104l-48-150h-6l-50 150Zm328 164v-76l202-252H556v-72h282v76L638-352h202v72H548ZM360-760l120-120 120 120H360ZM480-80 360-200h240L480-80Z"/></svg></span>
                         <span>Sort by name:</span>
                         <select id="sort-selector" class="sort-selector">
                             <option value="default">Default</option>
@@ -63,9 +55,13 @@
                 </div>
 
                 <p id="state" class="app-state">Showing 0 users</p>
-                <p id="status" class="app-status">Ready to load</p>
+                <div class="loading-container" id="loading-container">
+                    <div class="spinner"></div>
+                    <p id="status" class="app-status"></p>
+                </div>
                 
                 <div class="empty-state" id="empty-state">
+                    <div class="empty-state-icon"></div>
                     <h3>No users found</h3>
                     <p>Try different filters</p>
                 </div>                
