@@ -10,38 +10,122 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadingContainer = document.getElementById('loading-container')
     const emptyState = document.getElementById('empty-state');
     const err = document.getElementById('err');
+    const burgerMenuBtn = document.getElementById('burgerMenuBtn');
+    const controlsPanel = document.getElementById('controlsPanel');
+    const confirmFiltersBtn = document.getElementById('confirmFiltersBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
 
     // footer year
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
     // App state
     let users = [];
-    let filteredUsers = [];
     let selectedCardId = null;
 
-    // update UI (render + status)
-    function renderUsers() {
-        const usersToRender = [...filteredUsers];
+    // Functions
+    function getProcessedUsers() {
+        let result = [...users];
 
-        if (sortSelector.value === 'name-asc') {
-            usersToRender.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (sortSelector.value === 'name-desc') {
-            usersToRender.sort((a, b) => b.name.localeCompare(a.name)); 
-        } else {
-            // default: keep as is
+        const nameValue = searchName.value.trim().toLowerCase();
+        const emailValue = searchEmail.value.trim().toLowerCase();
+
+        // Apply filters
+        if (nameValue || emailValue) {
+            result = result.filter(user => {
+                const nameMatch = !nameValue || user.name.toLowerCase().includes(nameValue);
+                const emailMatch = !emailValue || user.email.toLowerCase().includes(emailValue);
+                return nameMatch && emailMatch;
+            });
         }
 
+        // Apply sorting
+        const sortValue = sortSelector.value;
+        if (sortValue === 'name-asc') {
+            result.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortValue === 'name-desc') {
+            result.sort((a, b) => b.name.localeCompare(a.name));
+        }
+
+        return result;
+    }
+
+    function isUserSelected(userId) {
+        return selectedCardId === userId;
+    }
+
+    function getTotalUserCount() {
+        return users.length;
+    }
+
+    function getFilteredUserCount() {
+        return getProcessedUsers().length;
+    }
+
+    function debounce(callback, delay) {
+        let timer;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => callback.apply(this, args), delay);
+        };
+    };
+
+    function openBurgerMenu() {
+        if (window.innerWidth > 768) return;
+
+        burgerMenuBtn.classList.add('active');
+        controlsPanel.classList.add('visible');
+        if (mobileOverlay) mobileOverlay.classList.add('visible');
+        burgerMenuBtn.setAttribute('aria-expanded', 'true');
+
+        const burgerText = burgerMenuBtn.querySelector('.burger-text');
+        if (burgerText) {
+            burgerText.textContent = 'Close Menu';
+        }
+
+        document.body.style.overflow = 'hidden';
+    };
+
+        function closeBurgerMenu() {
+        if (window.innerWidth > 768) return;
+        
+        burgerMenuBtn.classList.remove('active');
+        controlsPanel.classList.remove('visible');
+        if (mobileOverlay) mobileOverlay.classList.remove('visible');
+        burgerMenuBtn.setAttribute('aria-expanded', 'false');
+        
+        const burgerText = burgerMenuBtn.querySelector('.burger-text');
+        if (burgerText) {
+            burgerText.textContent = 'Filters & Sort';
+        }
+        
+        document.body.style.overflow = '';
+    };
+
+    function toggleBurgerMenu() {
+        const isVisible = controlsPanel.classList.contains('visible');
+        if (isVisible) {
+            closeBurgerMenu();
+        } else {
+            openBurgerMenu();
+        }
+    };
+
+    // update UI (render)
+    function renderUsers(shouldAnimate = false) {
+        const usersToRender = getProcessedUsers();
         const count = usersToRender.length;
+        const totalCount = getTotalUserCount();
+
         state.textContent = `Showing: ${count} user${count !== 1 ? 's' : ''}`;
 
         if (count === 0) {
             userGrid.innerHTML = '';
             emptyState.classList.add('visible');
             
-            if (users.length === 0) {
+            if (totalCount === 0) {
                 status.textContent = 'No users loaded yet.';
             } else {
-                status.textContent = 'No matches found.';
+                status.textContent = 'No matches found (filtered from ${totalCount} total)';
             }
             return;
         }
@@ -50,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let html = '';
         usersToRender.forEach(user => {            
-            const isExpanded = (selectedCardId === user.id);
+            const isExpanded = isUserSelected(user.id);
 
             html += `
                 <div class="user-card ${isExpanded ? 'expanded' : ''}"  id="${user.id}">
@@ -91,32 +175,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         
         userGrid.innerHTML = html;
-    };
 
-    function applyFilters() {
-        const nameValue = searchName.value.trim().toLowerCase();
-        const emailValue = searchEmail.value.trim().toLowerCase();
-
-        filteredUsers = users.filter(user => {
-            return (
-                user.name.toLowerCase().includes(nameValue) &&
-                user.email.toLowerCase().includes(emailValue)
-            );
-        });
-
-        if (selectedCardId && !filteredUsers.some(u => u.id === selectedCardId)) {
-            selectedCardId = null;
+        if (shouldAnimate) {
+            userGrid.classList.add('animate');
+            setTimeout(() => {
+                userGrid.classList.remove('animate');
+            }, 1000);
         }
-
-        renderUsers();
     };
 
+    // Fetch users
     async function fetchUsers() {
         err.classList.remove('visible');
         loadBtn.disabled = true;
         
         loadingContainer.classList.add('visible');
-
         userGrid.innerHTML = '';
         emptyState.classList.remove('visible');
 
@@ -135,95 +208,114 @@ document.addEventListener("DOMContentLoaded", () => {
                 company: u.company?.name || ''
             }));
             
-            // reset filters
+            // reset UI controls
             searchName.value = '';
             searchEmail.value = '';
             sortSelector.value = 'default';
-            filteredUsers = [...users];
+            selectedCardId = null;
 
             loadingContainer.classList.remove('visible');
-            renderUsers();
+            renderUsers(true);
         } catch (error) {
-            console.log(error);            
+            console.log('Fetch error:', error);            
             loadingContainer.classList.remove('visible');
             err.classList.add('visible');
             err.textContent = `Error: ${error.message}`;
             status.textContent = 'Failed to load users';
             users = [];
-            filteredUsers = [];
-            renderUsers();
+            renderUsers(false);
         } finally {
             loadBtn.disabled = false;
         }
-    }
+    };
 
     function showDetails(userId) {
-        const user = users.find(u => u.id === userId);
-        if (!user) return;
+        const userExists = users.some(u => u.id === userId);
+        if (!userExists) return;
 
         // Toggle
-        if (selectedCardId === userId) {
-            selectedCardId = null;
-        } else {
-            selectedCardId = userId;
-        }
-
-        renderUsers();
-        console.log('showDetails')
-    }
+        selectedCardId = (selectedCardId === userId) ? null : userId;
+        renderUsers(false);
+    };
 
     function highlightText(text, match) {
         if (!match) return text;
 
         const regex = new RegExp(match, 'gi');
         return text.replace(regex, (match) => `<mark>${match}</mark>`);
-    }
-
-    function debounce(callback, delay) {
-        let timer;
-        return function() {
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-                callback();
-            }, delay);
-        };
     };
 
-    loadBtn.addEventListener('click', fetchUsers);
+    const handleFilterChange = debounce(() => {
+        if (selectedCardId) {
+            const processedUsers = getProcessedUsers();
+            if (!processedUsers.some(u => u.id === selectedCardId)) {
+                selectedCardId = null;
+            }
+        }
+        renderUsers(false);
+    }, 300);
 
-    const debounceApplyFilters = debounce(applyFilters, 400);
-    searchName.addEventListener('input', debounceApplyFilters);
-    searchEmail.addEventListener('input', debounceApplyFilters);
-
-    resetBtn.addEventListener('click', () => {
+    const handleReset = () => {
         searchName.value = '';
         searchEmail.value = '';
         sortSelector.value = 'default';
-        filteredUsers = users;
-        renderUsers();
-    });
+        selectedCardId = null;
+        renderUsers(false);
+        closeBurgerMenu();
+    };
 
-    sortSelector.addEventListener('change', () => {
-        renderUsers();
-    });
+    const handleSortChange = () => {
+        renderUsers(false);
+        closeBurgerMenu();
+    }
 
-    userGrid.addEventListener('click', (e) => {
+    const handleCardClick = (e) => {
         const card = e.target.closest('.user-card');
         if(!card) return;
-        const userId = Number(card.id);
 
+        const userId = Number(card.id);
         const detailsBtn = e.target.closest('.btn-details');
+        
         if (detailsBtn) {
             e.preventDefault();
-            showDetails(userId);
-            return;
+            e.stopPropagation();
         }
 
-        if (userId) {
-            selectedCardId = userId;
-            renderUsers();
+        showDetails(userId);
+    };
+
+    const handleClickOutside = (e) => {
+        if (window.innerWidth <= 768) {
+            const isClickInside = controlsPanel.contains(e.target) || 
+                                burgerMenuBtn.contains(e.target);
+            
+            if (!isClickInside && controlsPanel.classList.contains('visible')) {
+                closeBurgerMenu();
+            }
         }
-    });
-    
+    };
+
+    // Event Listeners
+    loadBtn.addEventListener('click', fetchUsers);
+    searchName.addEventListener('input', handleFilterChange);
+    searchEmail.addEventListener('input', handleFilterChange);
+    resetBtn.addEventListener('click', handleReset);
+    sortSelector.addEventListener('change', handleSortChange);
+    userGrid.addEventListener('click', handleCardClick);
+
+    if (burgerMenuBtn) {
+        burgerMenuBtn.addEventListener('click', toggleBurgerMenu);
+    }
+
+    if (confirmFiltersBtn) {
+        confirmFiltersBtn.addEventListener('click', closeBurgerMenu);
+    }
+
+    if (mobileOverlay) {        
+        mobileOverlay.addEventListener('click', closeBurgerMenu);
+    }
+
+    document.addEventListener('click', handleClickOutside);
+
     fetchUsers();
 });

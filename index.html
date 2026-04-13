@@ -34,8 +34,13 @@
 
             <div class="app-header">
                 <button id="loadBtn" class="btn-load">Load Users</button>
+
+                <button id="burgerMenuBtn" class="burger-menu-btn">
+                    <span class="burger-icon"></span>
+                    <span class="burger-text">Filters & Sort</span>
+                </button>
                 
-                <div class="sort">
+                <div class="sort collapsible-panel" id="controlsPanel">
                     <input type="text" class="filter search-name" id="search-name" placeholder=" Search user by name..." />
                     <input type="text" class="filter search-email" id="search-email" placeholder="Search user by email..." />
 
@@ -52,6 +57,11 @@
                             <option value="name-desc">Z → A</option>
                         </select>
                     </label>
+
+                    <button id="confirmFiltersBtn" class="confirm-filters-btn">
+                        <span>✓</span>
+                        <span>Apply Filters</span>
+                    </button>
                 </div>
 
                 <p id="state" class="app-state">Showing 0 users</p>
