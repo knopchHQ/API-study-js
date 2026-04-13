@@ -164,6 +164,7 @@ h1, h2, h3, h4 {
     transition: var(--transition);
 }
 .btn-load {
+    min-width: 140px;
     background: var(--primary);
     color: white;
     font-size: 1.3rem;
@@ -195,21 +196,25 @@ h1, h2, h3, h4 {
     justify-content: center;
     gap: 12px;
     width: 100%;
+    min-width: 140px;
     padding: 14px 20px;
     margin-bottom: 20px;
-    background: white;
-    border: 2px solid var(--border-light);
+    background: linear-gradient(120deg,
+        rgba(247, 37, 133, 0.15) 0%,
+        rgba(247, 37, 133, 0.25) 100%);
+    border: 2px solid rgba(247, 37, 133, 0.03);
     border-radius: 40px;
     font-size: 1rem;
-    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
     color: var(--text-dark);
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 3px 0 var(--accent-glow);
 }
 .burger-menu-btn:hover {
-    border-color: var(--primary);
-    background: var(--bg-page);
+    border: 3px solid var(--accent-glow);
+    box-shadow: 0 3px 8px var(--accent-glow);
 }
 .burger-icon {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20px' viewBox='0 -960 960 960' width='20px' fill='%23000000'%3E%3Cpath d='M456.18-192Q446-192 439-198.9t-7-17.1v-227L197-729q-9-12-2.74-25.5Q200.51-768 216-768h528q15.49 0 21.74 13.5Q772-741 763-729L528-443v227q0 10.2-6.88 17.1-6.89 6.9-17.06 6.9h-47.88ZM480-498l162-198H317l163 198Zm0 0Z'/%3E%3C/svg%3E");
@@ -355,19 +360,45 @@ h1, h2, h3, h4 {
     color: var(--text-soft);
 }
 .sort-selector {
+    background: linear-gradient(120deg,
+        rgba(247, 37, 133, 0.15) 0%,
+        rgba(247, 37, 133, 0.25) 100%);
+    color: var(--text-dark);
     padding: 10px 20px;
     border-radius: 40px;
     border: 1.5px solid var(--border-light);
-    background: white;
+    font-size: 0.9rem;
     font-family: 'Inter', sans-serif;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
     min-width: 140px;
+    box-shadow: 0 3px 0 var(--accent-glow);
 }
 .sort-selector:focus {
-    border-color: var(--primary);
+    border-color: var(--accent-glow);
     outline: none;
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 14px 20px var(--accent-glow);
+}
+.highlight {
+    background: linear-gradient(120deg, 
+        rgba(247, 37, 133, 0.15) 0%, 
+        rgba(247, 37, 133, 0.25) 100%);
+    color: var(--text-dark);
+    font-weight: 600;
+    padding: 0.1em 0.2em;
+    border-radius: 4px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    border-bottom: 2px solid var(--accent-glow);
+}
+.highlight-fresh {
+    animation: highlightPulse 0.6s ease-out;
+}
+@keyframes highlightPulse {
+    0% { background: rgba(247, 37, 133, 0.4); }
+    100% { background: rgba(247, 37, 133, 0.15); }
 }
 
 /* ---------Status + State indicators--------- */

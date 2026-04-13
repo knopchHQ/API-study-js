@@ -61,6 +61,32 @@ document.addEventListener("DOMContentLoaded", () => {
         return getProcessedUsers().length;
     }
 
+    function escapeHTML(str) {
+        if (!str && str !== 0) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;')
+
+    }
+
+    function highlightText(text, searchTerm) {
+        if (!searchTerm || !text) return escapeHTML(text);
+
+        const escapedText = escapeHTML(text).toLowerCase();
+        const trimmedSearch = searchTerm.trim();
+
+        if (trimmedSearch === '') return escapedText;
+
+        const escapedSearch = trimmedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        const regex = new RegExp(`(${escapedSearch})`, 'gi');
+
+        return escapedText.replace(regex, '<mark class="highlight">$1</mark>');
+    };
+
     function debounce(callback, delay) {
         let timer;
         return function(...args) {
@@ -85,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = 'hidden';
     };
 
-        function closeBurgerMenu() {
+    function closeBurgerMenu() {
         if (window.innerWidth > 768) return;
         
         burgerMenuBtn.classList.remove('active');
@@ -115,6 +141,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const usersToRender = getProcessedUsers();
         const count = usersToRender.length;
         const totalCount = getTotalUserCount();
+        const nameSearchTerm = searchName.value.trim();
+        const emailSearchTerm = searchEmail.value.trim();
 
         state.textContent = `Showing: ${count} user${count !== 1 ? 's' : ''}`;
 
@@ -125,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (totalCount === 0) {
                 status.textContent = 'No users loaded yet.';
             } else {
-                status.textContent = 'No matches found (filtered from ${totalCount} total)';
+                status.textContent = `No matches found (filtered from ${totalCount} total)`;
             }
             return;
         }
@@ -135,6 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let html = '';
         usersToRender.forEach(user => {            
             const isExpanded = isUserSelected(user.id);
+            const highlightedName = highlightText(user.name, nameSearchTerm);
+            const highlightedEmail = highlightText(user.email, emailSearchTerm);
 
             html += `
                 <div class="user-card ${isExpanded ? 'expanded' : ''}"  id="${user.id}">
@@ -143,8 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             <img class="icon-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233f37c9'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="user">
                         </div>
                         <div class="user-basic">
-                            <h3 class="user-name">${user.name}</h3>
-                            <p class="user-email">${user.email}</p>
+                            <h3 class="user-name">${highlightedName}</h3>
+                            <p class="user-email">${highlightedEmail}</p>
                         </div>
                         <button class="btn-details" id="${user.id}">
                             ${isExpanded ? 'Close' : 'Show Details'}
@@ -155,23 +185,22 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="user-details-expanded">
                             <div class="detail-row">
                                 <span class="detail-label">Phone</span>
-                                <span class="detail-value">${user.phone || '__'}</span>
+                                <span class="detail-value">${escapeHTML(user.phone) || '__'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Website</span>
                                 <span class="detail-value">
-                                    ${user.website ? `<a href="https://${user.website}" target="_blank">${user.website}</a>` : '__'}
+                                    ${user.website ? `<a href="https://${escapeHTML(user.website)}" target="_blank">${escapeHTML(user.website)}</a>` : '__'}
                                 </span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Company</span>
-                                <span class="detail-value">${user.company || '—'}</span>
+                                <span class="detail-value">${escapeHTML(user.company) || '—'}</span>
                             </div>
                         </div>
                     ` : ''}
                 </div>
-            `;
-            
+            `;            
         });
         
         userGrid.innerHTML = html;
@@ -236,13 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Toggle
         selectedCardId = (selectedCardId === userId) ? null : userId;
         renderUsers(false);
-    };
-
-    function highlightText(text, match) {
-        if (!match) return text;
-
-        const regex = new RegExp(match, 'gi');
-        return text.replace(regex, (match) => `<mark>${match}</mark>`);
     };
 
     const handleFilterChange = debounce(() => {
