@@ -26,7 +26,7 @@ body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--text-dark);
-    background-color: var(--bg-light);
+    background-color: var(--bg-page);
     overflow-x: hidden;    
     min-height: 100vh;
     display: grid;
@@ -48,7 +48,7 @@ body {
     bottom: 0;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(2px);
-    z-index: 98;
+    z-index: 90;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -162,6 +162,8 @@ h1, h2, h3, h4 {
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(63, 55, 201, 0.08);
     transition: var(--transition);
+    position: relative;
+    z-index: 99;
 }
 .btn-load {
     min-width: 140px;
@@ -211,6 +213,7 @@ h1, h2, h3, h4 {
     cursor: pointer;
     transition: var(--transition);
     box-shadow: 0 3px 0 var(--accent-glow);
+    z-index: 100;
 }
 .burger-menu-btn:hover {
     border: 3px solid var(--accent-glow);
@@ -265,6 +268,9 @@ h1, h2, h3, h4 {
 .collapsible-panel {
     transition: var(--transition);
     transform-origin: top;
+    position: relative;
+    z-index: 99;
+    background-color: var(--bg-surface);
 }
 .confirm-filters-btn {
     display: none;

@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <h3 class="user-name">${highlightedName}</h3>
                             <p class="user-email">${highlightedEmail}</p>
                         </div>
-                        <button class="btn-details" id="${user.id}">
+                        <button class="btn-details">
                             ${isExpanded ? 'Close' : 'Show Details'}
                         </button>
                     </div>
