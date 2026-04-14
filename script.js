@@ -107,8 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (burgerText) {
             burgerText.textContent = 'Close Menu';
         }
-
-        document.body.style.overflow = 'hidden';
     };
 
     function closeBurgerMenu() {
@@ -123,8 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (burgerText) {
             burgerText.textContent = 'Filters & Sort';
         }
-        
-        document.body.style.overflow = '';
     };
 
     function toggleBurgerMenu() {
