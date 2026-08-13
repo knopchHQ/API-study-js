@@ -3,7 +3,7 @@
 Interactive web application for loading, filtering, and exploring user data from an external API.
 
 ## 🌐 Live Demo
-https://knopchhq.github.io/API-study-js/
+https://knopchhq.github.io/User-Loader-App/
 
 ---
 
